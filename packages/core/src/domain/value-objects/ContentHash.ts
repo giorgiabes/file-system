@@ -1,3 +1,21 @@
+/**
+ * Purpose: Represents a SHA-256 hash that identifies file content. Two
+ * files with identical content will have same hash (this enables
+ * deduplication)
+ *
+ * How it will be used:
+ * // When uploading a file:
+ * const content = Buffer.from("Hello World");
+ * const hash = ContentHash.fromContent(content); // Calculates SHA-256
+ *
+ * // When reading from database:
+ * const hash2 = ContentHash.fromString("a591a6d40bf420404a011733cfb7b190...");
+ * // Check if two files are identical:
+ * if (hash.equals(hash2)) {
+ *  console.log("Same content! No need to store twice");
+ * }
+ */
+
 import crypto from "crypto";
 
 class ContentHash {

@@ -1,0 +1,29 @@
+{
+  "name": "file-system",
+  "version": "1.0.0",
+  "description": "Content Addressable Storage File System",
+  "private": "true",
+  "workspaces": [
+    "packages/*"
+  ],
+  "main": "index.js",
+  "scripts": {
+    "build": "npm run build --workspaces --if-present"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/giorgiabes/file-system.git"
+  },
+  "keywords": [
+    "TypeScript, CAS, Content Addressable Storage, File System"
+  ],
+  "author": "Giorgi Abesadze",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/giorgiabes/file-system/issues"
+  },
+  "homepage": "https://github.com/giorgiabes/file-system#readme",
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  }
+}

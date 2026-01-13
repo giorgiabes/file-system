@@ -1,4 +1,6 @@
 /**
+ * File: ContentHash.ts
+ *
  * Purpose: Represents a SHA-256 hash that identifies file content. Two
  * files with identical content will have same hash (this enables
  * deduplication)

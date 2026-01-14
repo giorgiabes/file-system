@@ -1,0 +1,18 @@
+{
+  "name": "@file-system/infrastructure",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc"
+  },
+  "dependencies": {
+    "@file-system/core": "*",
+    "pg": "^8.11.3"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@types/pg": "^8.10.9",
+    "typescript": "^5.9.3"
+  }
+}

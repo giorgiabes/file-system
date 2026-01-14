@@ -4,15 +4,18 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "tsc"
+    "build": "tsc",
+    "migrate": "ts-node src/metadata/migrations/run-migrations.ts"
   },
   "dependencies": {
     "@file-system/core": "*",
-    "pg": "^8.11.3"
+    "pg": "^8.11.3",
+    "dotenv": "^16.4.5"
   },
   "devDependencies": {
     "@types/node": "^20.11.0",
     "@types/pg": "^8.10.9",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "ts-node": "^10.9.2"
   }
 }

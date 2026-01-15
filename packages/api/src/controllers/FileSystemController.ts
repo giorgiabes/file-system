@@ -5,7 +5,6 @@
 import { Request, Response, NextFunction } from "express";
 import { IFsProvider } from "@file-system/core/dist/interfaces/IFsProvider";
 import FileNode from "@file-system/core/dist/domain/entities/FileNode";
-import DirectoryNode from "@file-system/core/dist/domain/entities/DirectoryNode";
 
 export class FileSystemController {
   constructor(private fsService: IFsProvider) {}

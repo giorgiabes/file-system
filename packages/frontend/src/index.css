@@ -210,3 +210,92 @@ button:disabled {
   font-size: 18px;
   color: #666;
 }
+
+/* File List Table */
+.file-list {
+  padding: 20px 40px;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: #999;
+  font-size: 18px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+thead {
+  background: #f8f9fa;
+}
+
+th {
+  padding: 16px;
+  text-align: left;
+  font-weight: 600;
+  color: #333;
+  border-bottom: 2px solid #e0e0e0;
+}
+
+tbody tr {
+  border-bottom: 1px solid #f0f0f0;
+  transition: background 0.2s;
+}
+
+tbody tr:hover {
+  background: #f8f9fa;
+}
+
+td {
+  padding: 16px;
+  color: #666;
+}
+
+.file-name {
+  background: none;
+  border: none;
+  color: #667eea;
+  cursor: pointer;
+  font-size: 16px;
+  padding: 0;
+  text-align: left;
+  width: auto;
+  font-weight: 500;
+}
+
+.file-name:hover {
+  text-decoration: underline;
+  transform: none;
+  box-shadow: none;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+}
+
+.action-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 20px;
+  padding: 4px 8px;
+  width: auto;
+  transition: transform 0.2s;
+}
+
+.action-btn:hover {
+  transform: scale(1.2);
+  box-shadow: none;
+}
+
+.action-btn.delete:hover {
+  filter: brightness(1.2);
+}

@@ -103,6 +103,7 @@ export class FileSystemController {
           item instanceof FileNode
             ? item.getContentHash().toString()
             : undefined,
+        mimeType: item instanceof FileNode ? item.getMimeType() : undefined,
         createdAt: item.getCreatedAt(),
         modifiedAt: item.getModifiedAt(),
       }));
@@ -152,6 +153,7 @@ export class FileSystemController {
           item instanceof FileNode
             ? item.getContentHash().toString()
             : undefined,
+        mimeType: item instanceof FileNode ? item.getMimeType() : undefined,
         createdAt: item.getCreatedAt(),
         modifiedAt: item.getModifiedAt(),
       };

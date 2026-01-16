@@ -11,8 +11,8 @@ export class PostgresRepository implements IMetadataRepository {
   // SQL Queries
   private readonly SQL = {
     INSERT_FILE_NODE: `
-      INSERT INTO fs_nodes (tenant_id, path, type, content_hash, size, created_at, modified_at)
-      VALUES ($1, $2, $3, $4, $5, $6, $7)
+      INSERT INTO fs_nodes (tenant_id, path, type, content_hash, size, mime_type, created_at, modified_at)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
     `,
 
     INSERT_DIRECTORY_NODE: `
@@ -21,15 +21,15 @@ export class PostgresRepository implements IMetadataRepository {
     `,
 
     GET_NODE_BY_PATH: `
-      SELECT path, type, content_hash, size, created_at, modified_at
+      SELECT path, type, content_hash, size, mime_type, created_at, modified_at
       FROM fs_nodes
       WHERE tenant_id = $1 AND path = $2
     `,
 
     UPDATE_FILE_NODE: `
       UPDATE fs_nodes 
-      SET content_hash = $1, size = $2, modified_at = $3
-      WHERE tenant_id = $4 AND path = $5
+      SET content_hash = $1, size = $2, mime_type = $3, modified_at = $4
+      WHERE tenant_id = $5 AND path = $6
     `,
 
     UPDATE_DIRECTORY_NODE: `
@@ -43,7 +43,7 @@ export class PostgresRepository implements IMetadataRepository {
     `,
 
     LIST_CHILDREN: `
-      SELECT path, type, content_hash, size, created_at, modified_at
+      SELECT path, type, content_hash, size, mime_type, created_at, modified_at
       FROM fs_nodes
       WHERE tenant_id = $1 
         AND path LIKE $2
@@ -100,6 +100,7 @@ export class PostgresRepository implements IMetadataRepository {
     if (node instanceof FileNode) {
       const contentHash = node.getContentHash().toString();
       const size = node.getSize();
+      const mimeType = node.getMimeType();
 
       await this.pool.query(this.SQL.INSERT_FILE_NODE, [
         tenantId,
@@ -107,6 +108,7 @@ export class PostgresRepository implements IMetadataRepository {
         "file",
         contentHash,
         size,
+        mimeType,
         createdAt,
         modifiedAt,
       ]);
@@ -138,7 +140,12 @@ export class PostgresRepository implements IMetadataRepository {
 
     if (row.type === "file") {
       const contentHash = ContentHash.fromString(row.content_hash);
-      const fileNode = new FileNode(filePath, contentHash, row.size);
+      const fileNode = new FileNode(
+        filePath,
+        contentHash,
+        row.size,
+        row.mime_type
+      );
 
       (fileNode as any).createdAt = row.created_at;
       (fileNode as any).modifiedAt = row.modified_at;
@@ -162,10 +169,12 @@ export class PostgresRepository implements IMetadataRepository {
     if (node instanceof FileNode) {
       const contentHash = node.getContentHash().toString();
       const size = node.getSize();
+      const mimeType = node.getMimeType();
 
       await this.pool.query(this.SQL.UPDATE_FILE_NODE, [
         contentHash,
         size,
+        mimeType,
         modifiedAt,
         tenantId,
         path,
@@ -188,7 +197,6 @@ export class PostgresRepository implements IMetadataRepository {
     directoryPath: string
   ): Promise<(FileNode | DirectoryNode)[]> {
     const tenantId = this.ensureTenant();
-
     const pattern = directoryPath === "/" ? "/%" : `${directoryPath}/%`;
     const depth =
       directoryPath === "/" ? 1 : (directoryPath.match(/\//g) || []).length + 1;
@@ -207,7 +215,12 @@ export class PostgresRepository implements IMetadataRepository {
 
       if (row.type === "file") {
         const contentHash = ContentHash.fromString(row.content_hash);
-        const fileNode = new FileNode(filePath, contentHash, row.size);
+        const fileNode = new FileNode(
+          filePath,
+          contentHash,
+          row.size,
+          row.mime_type
+        );
         (fileNode as any).createdAt = row.created_at;
         (fileNode as any).modifiedAt = row.modified_at;
         nodes.push(fileNode);

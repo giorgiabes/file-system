@@ -24,6 +24,7 @@ export interface FileItem {
   type: "file" | "directory";
   size: number;
   contentHash?: string; // Optional - only files have this
+  mimeTipe?: string;
   createdAt: string;
   modifiedAt: string;
 }

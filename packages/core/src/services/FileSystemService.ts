@@ -9,6 +9,7 @@ import { IBlobStorage } from "../interfaces/IBlobStorage";
 import FilePath from "../domain/value-objects/FilePath";
 import ContentHash from "../domain/value-objects/ContentHash";
 import FileNode from "../domain/entities/FileNode";
+import mime from "mime-types";
 import DirectoryNode from "../domain/entities/DirectoryNode";
 import {
   FileNotFoundError,
@@ -125,7 +126,13 @@ export class FileSystemService implements IFsProvider {
       }
 
       // Create file node
-      const fileNode = new FileNode(filePath, contentHash, content.length);
+      const mimeType = mime.lookup(path) || "application/octet-stream";
+      const fileNode = new FileNode(
+        filePath,
+        contentHash,
+        content.length,
+        mimeType
+      );
       await this.repository.createNode(fileNode);
 
       // Increment blob reference

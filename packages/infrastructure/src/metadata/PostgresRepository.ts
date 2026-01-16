@@ -190,7 +190,8 @@ export class PostgresRepository implements IMetadataRepository {
     const tenantId = this.ensureTenant();
 
     const pattern = directoryPath === "/" ? "/%" : `${directoryPath}/%`;
-    const depth = (directoryPath.match(/\//g) || []).length + 1;
+    const depth =
+      directoryPath === "/" ? 1 : (directoryPath.match(/\//g) || []).length + 1;
 
     const result = await this.pool.query(this.SQL.LIST_CHILDREN, [
       tenantId,

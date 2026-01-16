@@ -21,7 +21,7 @@ api.interceptors.request.use((config) => {
 export interface FileItem {
   name: string;
   path: string;
-  type: "file" | "dictionary";
+  type: "file" | "directory";
   size: number;
   contentHash?: string; // Optional - only files have this
   createdAt: string;

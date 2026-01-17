@@ -9,6 +9,8 @@ export interface IFsProvider {
   // Directory operations
   createDirectory(path: string): Promise<void>;
   deleteDirectory(path: string): Promise<void>;
+  copyDirectory(source: string, destination: string): Promise<void>;
+  moveDirectory(source: string, destination: string): Promise<void>;
   listDirectory(path: string): Promise<(FileNode | DirectoryNode)[]>;
 
   // File operations

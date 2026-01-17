@@ -199,4 +199,39 @@ export class FileSystemController {
       next(error);
     }
   };
+  copyDirectory = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { source, destination } = req.body;
+
+      if (!source || !destination) {
+        return res
+          .status(400)
+          .json({ error: "Source and destination required" });
+      }
+
+      await this.fsService.copyDirectory(source, destination);
+
+      res.json({ message: "Directory copied successfully" });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  moveDirectory = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { source, destination } = req.body;
+
+      if (!source || !destination) {
+        return res
+          .status(400)
+          .json({ error: "Source and destination required" });
+      }
+
+      await this.fsService.moveDirectory(source, destination);
+
+      res.json({ message: "Directory moved successfully" });
+    } catch (error) {
+      next(error);
+    }
+  };
 }

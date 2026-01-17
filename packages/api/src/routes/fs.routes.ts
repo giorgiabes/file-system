@@ -15,6 +15,8 @@ export function createFsRoutes(fsController: FileSystemController): Router {
   router.post("/directories", fsController.createDirectory);
   router.get("/directories", fsController.listDirectory);
   router.delete("/directories", fsController.deleteDirectory);
+  router.post("/directories/copy", fsController.copyDirectory);
+  router.post("/directories/move", fsController.moveDirectory);
 
   // Info
   router.get("/info", fsController.getInfo);

@@ -243,6 +243,62 @@ export class FileSystemService implements IFsProvider {
     await this.deleteFile(source);
   }
 
+  async copyDirectory(source: string, destination: string): Promise<void> {
+    // 1. Get source directory info
+    const sourceNode = await this.repository.getNodeByPath(source);
+    if (!sourceNode) {
+      throw new DirectoryNotFoundError(`Source directory not found: ${source}`);
+    }
+    if (sourceNode instanceof FileNode) {
+      throw new DirectoryNotFoundError(
+        `Source is a file, not directory: ${source}`
+      );
+    }
+
+    // 2. Create destination directory
+    await this.createDirectory(destination);
+
+    // 3. Get all children
+    const children = await this.repository.listChildren(source);
+
+    // 4. Copy each child recursively
+    for (const child of children) {
+      const childName = child.getPath().toString().split("/").pop() || "";
+      const newPath = `${destination}/${childName}`;
+
+      if (child instanceof FileNode) {
+        // Copy file
+        await this.copyFile(child.getPath().toString(), newPath);
+      } else {
+        // Recursively copy subdirectory
+        await this.copyDirectory(child.getPath().toString(), newPath);
+      }
+    }
+  }
+
+  async moveDirectory(source: string, destination: string): Promise<void> {
+    // Copy then delete
+    await this.copyDirectory(source, destination);
+    await this.deleteDirectoryRecursive(source);
+  }
+
+  private async deleteDirectoryRecursive(path: string): Promise<void> {
+    // Get all children
+    const children = await this.repository.listChildren(path);
+
+    // Delete all children first
+    for (const child of children) {
+      if (child instanceof FileNode) {
+        await this.deleteFile(child.getPath().toString());
+      } else {
+        await this.deleteDirectoryRecursive(child.getPath().toString());
+      }
+    }
+
+    // Then delete the directory itself
+    await this.deleteDirectory(path);
+  }
+
   async setWorkingDirectory(path: string): Promise<void> {
     // DOTO: I'll implement this later
     throw new Error("Not implemented for now");

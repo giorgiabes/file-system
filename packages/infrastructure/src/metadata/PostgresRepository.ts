@@ -8,76 +8,6 @@ import ContentHash from "@file-system/core/dist/domain/value-objects/ContentHash
 export class PostgresRepository implements IMetadataRepository {
   private currentTenantId: string | null = null;
 
-  // SQL Queries
-  private readonly SQL = {
-    INSERT_FILE_NODE: `
-      INSERT INTO fs_nodes (tenant_id, path, type, content_hash, size, mime_type, created_at, modified_at)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-    `,
-
-    INSERT_DIRECTORY_NODE: `
-      INSERT INTO fs_nodes (tenant_id, path, type, created_at, modified_at)
-      VALUES ($1, $2, $3, $4, $5)
-    `,
-
-    GET_NODE_BY_PATH: `
-      SELECT path, type, content_hash, size, mime_type, created_at, modified_at
-      FROM fs_nodes
-      WHERE tenant_id = $1 AND path = $2
-    `,
-
-    UPDATE_FILE_NODE: `
-      UPDATE fs_nodes 
-      SET content_hash = $1, size = $2, mime_type = $3, modified_at = $4
-      WHERE tenant_id = $5 AND path = $6
-    `,
-
-    UPDATE_DIRECTORY_NODE: `
-      UPDATE fs_nodes 
-      SET modified_at = $1
-      WHERE tenant_id = $2 AND path = $3
-    `,
-
-    DELETE_NODE: `
-      DELETE FROM fs_nodes WHERE tenant_id = $1 AND path = $2
-    `,
-
-    LIST_CHILDREN: `
-      SELECT path, type, content_hash, size, mime_type, created_at, modified_at
-      FROM fs_nodes
-      WHERE tenant_id = $1 
-        AND path LIKE $2
-        AND path != $3
-        AND (LENGTH(path) - LENGTH(REPLACE(path, '/', ''))) = $4
-      ORDER BY type DESC, path ASC
-    `,
-
-    INCREMENT_BLOB_REF: `
-      INSERT INTO blobs (content_hash, reference_count, size, created_at, last_accessed_at)
-      VALUES ($1, 1, 0, NOW(), NOW())
-      ON CONFLICT (content_hash) 
-      DO UPDATE SET 
-        reference_count = blobs.reference_count + 1,
-        last_accessed_at = NOW()
-    `,
-
-    DECREMENT_BLOB_REF: `
-      UPDATE blobs 
-      SET reference_count = reference_count - 1,
-          last_accessed_at = NOW()
-      WHERE content_hash = $1
-      RETURNING reference_count
-    `,
-
-    GET_ORPHAN_BLOBS: `
-      SELECT content_hash 
-      FROM blobs 
-      WHERE reference_count = 0
-      ORDER BY last_accessed_at ASC
-      LIMIT 1000
-    `,
-  };
-
   constructor(private pool: Pool) {}
 
   setTenant(tenantId: string): void {
@@ -102,34 +32,45 @@ export class PostgresRepository implements IMetadataRepository {
       const size = node.getSize();
       const mimeType = node.getMimeType();
 
-      await this.pool.query(this.SQL.INSERT_FILE_NODE, [
-        tenantId,
-        path,
-        "file",
-        contentHash,
-        size,
-        mimeType,
-        createdAt,
-        modifiedAt,
-      ]);
+      await this.pool.query(
+        `
+        INSERT INTO
+        fs_nodes (tenant_id, path, type, content_hash, size, mime_type, created_at, modified_at)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+        `,
+        [
+          tenantId,
+          path,
+          "file",
+          contentHash,
+          size,
+          mimeType,
+          createdAt,
+          modifiedAt,
+        ],
+      );
     } else {
-      await this.pool.query(this.SQL.INSERT_DIRECTORY_NODE, [
-        tenantId,
-        path,
-        "directory",
-        createdAt,
-        modifiedAt,
-      ]);
+      await this.pool.query(
+        `
+        INSERT INTO fs_nodes (tenant_id, path, type, created_at, modified_at)
+        VALUES ($1, $2, $3, $4, $5)
+        `,
+        [tenantId, path, "directory", createdAt, modifiedAt],
+      );
     }
   }
 
   async getNodeByPath(path: string): Promise<FileNode | DirectoryNode | null> {
     const tenantId = this.ensureTenant();
 
-    const result = await this.pool.query(this.SQL.GET_NODE_BY_PATH, [
-      tenantId,
-      path,
-    ]);
+    const result = await this.pool.query(
+      `
+      SELECT path, type, content_hash, size, mime_type, created_at, modified_at
+      FROM fs_nodes
+      WHERE tenant_id = $1 AND path = $2
+      `,
+      [tenantId, path],
+    );
 
     if (result.rows.length === 0) {
       return null;
@@ -144,7 +85,7 @@ export class PostgresRepository implements IMetadataRepository {
         filePath,
         contentHash,
         row.size,
-        row.mime_type
+        row.mime_type,
       );
 
       (fileNode as any).createdAt = row.created_at;
@@ -171,42 +112,56 @@ export class PostgresRepository implements IMetadataRepository {
       const size = node.getSize();
       const mimeType = node.getMimeType();
 
-      await this.pool.query(this.SQL.UPDATE_FILE_NODE, [
-        contentHash,
-        size,
-        mimeType,
-        modifiedAt,
-        tenantId,
-        path,
-      ]);
+      await this.pool.query(
+        `
+        UPDATE fs_nodes 
+        SET content_hash = $1, size = $2, mime_type = $3, modified_at = $4
+        WHERE tenant_id = $5 AND path = $6
+        `,
+        [contentHash, size, mimeType, modifiedAt, tenantId, path],
+      );
     } else {
-      await this.pool.query(this.SQL.UPDATE_DIRECTORY_NODE, [
-        modifiedAt,
-        tenantId,
-        path,
-      ]);
+      await this.pool.query(
+        `
+        UPDATE fs_nodes 
+        SET modified_at = $1
+        WHERE tenant_id = $2 AND path = $3
+        `,
+        [modifiedAt, tenantId, path],
+      );
     }
   }
 
   async deleteNode(path: string): Promise<void> {
     const tenantId = this.ensureTenant();
-    await this.pool.query(this.SQL.DELETE_NODE, [tenantId, path]);
+    await this.pool.query(
+      `
+      DELETE FROM fs_nodes WHERE tenant_id = $1 AND path = $2
+      `,
+      [tenantId, path],
+    );
   }
 
   async listChildren(
-    directoryPath: string
+    directoryPath: string,
   ): Promise<(FileNode | DirectoryNode)[]> {
     const tenantId = this.ensureTenant();
     const pattern = directoryPath === "/" ? "/%" : `${directoryPath}/%`;
     const depth =
       directoryPath === "/" ? 1 : (directoryPath.match(/\//g) || []).length + 1;
 
-    const result = await this.pool.query(this.SQL.LIST_CHILDREN, [
-      tenantId,
-      pattern,
-      directoryPath,
-      depth,
-    ]);
+    const result = await this.pool.query(
+      `
+      SELECT path, type, content_hash, size, mime_type, created_at, modified_at
+      FROM fs_nodes
+      WHERE tenant_id = $1 
+        AND path LIKE $2
+        AND path != $3
+        AND (LENGTH(path) - LENGTH(REPLACE(path, '/', ''))) = $4
+      ORDER BY type DESC, path ASC
+      `,
+      [tenantId, pattern, directoryPath, depth],
+    );
 
     const nodes: (FileNode | DirectoryNode)[] = [];
 
@@ -219,7 +174,7 @@ export class PostgresRepository implements IMetadataRepository {
           filePath,
           contentHash,
           row.size,
-          row.mime_type
+          row.mime_type,
         );
         (fileNode as any).createdAt = row.created_at;
         (fileNode as any).modifiedAt = row.modified_at;
@@ -236,7 +191,17 @@ export class PostgresRepository implements IMetadataRepository {
   }
 
   async incrementBlobRefCount(contentHash: string): Promise<void> {
-    await this.pool.query(this.SQL.INCREMENT_BLOB_REF, [contentHash]);
+    await this.pool.query(
+      `
+      INSERT INTO blobs (content_hash, reference_count, size, created_at, last_accessed_at)
+      VALUES ($1, 1, 0, NOW(), NOW())
+      ON CONFLICT (content_hash) 
+      DO UPDATE SET 
+        reference_count = blobs.reference_count + 1,
+        last_accessed_at = NOW()
+      `,
+      [contentHash],
+    );
   }
 
   async decrementBlobRefCount(contentHash: string): Promise<number> {
@@ -245,9 +210,16 @@ export class PostgresRepository implements IMetadataRepository {
     try {
       await client.query("BEGIN");
 
-      const result = await client.query(this.SQL.DECREMENT_BLOB_REF, [
-        contentHash,
-      ]);
+      const result = await client.query(
+        `
+        UPDATE blobs 
+        SET reference_count = reference_count - 1,
+            last_accessed_at = NOW()
+        WHERE content_hash = $1
+        RETURNING reference_count
+        `,
+        [contentHash],
+      );
 
       await client.query("COMMIT");
 
@@ -265,7 +237,15 @@ export class PostgresRepository implements IMetadataRepository {
   }
 
   async getOrphanBlobs(): Promise<string[]> {
-    const result = await this.pool.query(this.SQL.GET_ORPHAN_BLOBS);
+    const result = await this.pool.query(
+      `
+      SELECT content_hash 
+      FROM blobs 
+      WHERE reference_count = 0
+      ORDER BY last_accessed_at ASC
+      LIMIT 1000
+      `,
+    );
     return result.rows.map((row) => row.content_hash);
   }
 }

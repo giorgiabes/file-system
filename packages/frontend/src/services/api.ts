@@ -24,7 +24,7 @@ export interface FileItem {
   type: "file" | "directory";
   size: number;
   contentHash?: string; // Optional - only files have this
-  mimeTipe?: string;
+  mimeType?: string;
   createdAt: string;
   modifiedAt: string;
 }
@@ -71,7 +71,7 @@ export const createDirectory = (path: string) =>
 export const listDirectory = (path: string) =>
   api.get<{ path: string; items: FileItem[]; count: number }>(
     "/api/fs/directories",
-    { params: { path } }
+    { params: { path } },
   );
 
 export const deleteDirectory = (path: string) =>

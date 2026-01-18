@@ -9,6 +9,7 @@ import {
   createDirectory,
   type FileItem,
 } from "../services/api";
+import FilePreview from "../components/FilePreview";
 
 function FileBrowser() {
   const [currentPath, setCurrentPath] = useState("/");
@@ -16,6 +17,7 @@ function FileBrowser() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const navigate = useNavigate();
+  const [previewFile, setPreviewFile] = useState<FileItem | null>(null);
 
   const loadFiles = async (path: string) => {
     setLoading(true);
@@ -124,6 +126,8 @@ function FileBrowser() {
   const handleNavigate = (item: FileItem) => {
     if (item.type === "directory") {
       loadFiles(item.path);
+    } else {
+      setPreviewFile(item);
     }
   };
 
@@ -169,7 +173,6 @@ function FileBrowser() {
           Logout
         </button>
       </header>
-
       <div className="breadcrumbs">
         {getBreadcrumbs().map((crumb, index) => (
           <span key={crumb.path}>
@@ -183,7 +186,6 @@ function FileBrowser() {
           </span>
         ))}
       </div>
-
       <div className="toolbar">
         <button onClick={handleUpload} className="btn btn-primary">
           📤 Upload File
@@ -195,9 +197,7 @@ function FileBrowser() {
           🔄 Refresh
         </button>
       </div>
-
       {error && <div className="error-message">{error}</div>}
-
       {loading ? (
         <div className="loading">Loading...</div>
       ) : (
@@ -259,6 +259,10 @@ function FileBrowser() {
             </table>
           )}
         </div>
+      )}
+
+      {previewFile && (
+        <FilePreview file={previewFile} onClose={() => setPreviewFile(null)} />
       )}
     </div>
   );

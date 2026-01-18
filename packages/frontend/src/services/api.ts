@@ -23,7 +23,7 @@ export interface FileItem {
   path: string;
   type: "file" | "directory";
   size: number;
-  contentHash?: string; // Optional - only files have this
+  contentHash?: string;
   mimeType?: string;
   createdAt: string;
   modifiedAt: string;

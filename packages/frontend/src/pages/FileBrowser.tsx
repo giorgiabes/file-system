@@ -57,8 +57,7 @@ function FileBrowser() {
       reader.onload = async () => {
         try {
           const content = btoa(reader.result as string);
-          const fileName = prompt("Enter file name:", file.name);
-          if (!fileName) return;
+          const fileName = file.name;
 
           const filePath =
             currentPath === "/" ? `/${fileName}` : `${currentPath}/${fileName}`;

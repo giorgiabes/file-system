@@ -36,7 +36,7 @@ This project implements a cloud file system similar to Dropbox, but with a uniqu
 ```
 ┌─────────────────────────────────────────────┐
 │            API Layer (Express)              │
-│  Controllers, Middleware, Routes, Auth     │
+│  Controllers, Middleware, Routes, Auth      │
 └─────────────────┬───────────────────────────┘
                   │ depends on
 ┌─────────────────▼───────────────────────────┐
